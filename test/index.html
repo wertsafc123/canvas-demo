@@ -1,0 +1,182 @@
+<!DOCTYPE html><html><head>
+<style>
+
+</style>
+</head>
+<body>
+<script type="text/javascript" src="https://wow.techbrood.com/libs/jquery/jquery-2.1.1.min.js"></script>
+<script src="https://wow.techbrood.com/uploads/1805/three.js"></script>
+<script src="https://wow.techbrood.com/uploads/160101/TrackballControls.js"></script>
+<img src="./earth.jpg" id="earth" style="display: none;" alt="">
+<div id='three' style='overflow: hidden; left: 0; top: 0; position: absolute;'></div>
+<script>
+const CITY_RADIUS = 100,
+    CITY_MARGIN = 0,
+    BLINT_SPEED = 0,
+    HEXAGON_RADIUS = 5,
+    radius = 100
+let scene, camera, renderer, clock, control
+let earthImg, earthData, earthParticles = new THREE.Object3D(),
+    cloud = new THREE.Object3D(),
+    hexagon = new THREE.Object3D(),
+    dotTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAABICAQAAADhLUt/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAGo2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDIgNzkuMTYwOTI0LCAyMDE3LzA3LzEzLTAxOjA2OjM5ICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpIiB4bXA6Q3JlYXRlRGF0ZT0iMjAxOS0xMi0xMFQxNjoyMjo1OCswODowMCIgeG1wOk1vZGlmeURhdGU9IjIwMTktMTItMTBUMTc6Mjg6MzUrMDg6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMTktMTItMTBUMTc6Mjg6MzUrMDg6MDAiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIxIiBwaG90b3Nob3A6SUNDUHJvZmlsZT0iRG90IEdhaW4gMTUlIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjg3YWU3ZDcyLTc4ZDYtMDQ0Yi04NWU3LTBkMzc4NmViYWY3OCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo2ODlmNGIxMC1iZmUzLWMxNDEtYmQ0Yy0xMTM0NzMwODk5NjkiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo2ODlmNGIxMC1iZmUzLWMxNDEtYmQ0Yy0xMTM0NzMwODk5NjkiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjY4OWY0YjEwLWJmZTMtYzE0MS1iZDRjLTExMzQ3MzA4OTk2OSIgc3RFdnQ6d2hlbj0iMjAxOS0xMi0xMFQxNjoyMjo1OCswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIChXaW5kb3dzKSIvPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6MGVmNGZhNGUtMjE5NC1kMDRjLWJkNTctNTJhYWE3ZWE3MWVjIiBzdEV2dDp3aGVuPSIyMDE5LTEyLTEwVDE3OjI2OjQyKzA4OjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo4N2FlN2Q3Mi03OGQ2LTA0NGItODVlNy0wZDM3ODZlYmFmNzgiIHN0RXZ0OndoZW49IjIwMTktMTItMTBUMTc6Mjg6MzUrMDg6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAoV2luZG93cykiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+YSETLwAAAS5JREFUaIHt1tERwUAUheG7xnt0IKXogA6iAy3oQAlaSCk6iA4kFRwP2BHmiL0iYub8XhibnS8ZyRVg42nya8B9wrCEYQnDEoYlDEsYljAsYVjCsIRhCcMShjVNPyTEd8hsZSubXT/WVloZmvht+tZIfsUjC5zw2AnFBzt7Mdg/QW7tB8agoBQAl6szEAbLlxQAWA6EQYaqE1MhS9/Zc2uvLe9ck9s6fWMPZtHjqlbB9TR4c+/UjUf1BP57TN3jqlYezKHHVa08mLLHVa08d1NmxzipWbXl1nSsecpxZUJj285F25BMMfeg5DM7zu1BZtP1JDaUsnGfphczqj9XZmaYY3c3wSvsMP/kB+C5m77W34+DryUMSxiWMCxhWMKwhGEJwxKGJQxLGJYwrFFhzrss0hEx1Q1EAAAAAElFTkSuQmCC'),
+    coneImg = ['https://wow.techbrood.com/uploads/1805/lightray.jpg', 'https://wow.techbrood.com/uploads/1805/lightray_yellow.jpg'],
+    hexagonColor = [0xffffff, 0xffffff]
+
+main()
+
+function main() {
+    earthImg = document.getElementById('earth')
+    earthImg.onload = () => {
+        let earthCanvas = document.createElement('canvas')
+        earthCtx = earthCanvas.getContext('2d')
+        earthCanvas.width = earthImg.width
+        earthCanvas.height = earthImg.height
+        earthCtx.drawImage(earthImg, 0, 0, earthImg.width, earthImg.height)
+        earthImgData = earthCtx.getImageData(0, 0, earthImg.width, earthImg.height)
+            // basic scene
+        createBasicScene()
+            // 球面打点
+        createEarthParticles()
+        animate()
+    }
+}
+
+function createBasicScene() {
+    let width = window.innerWidth,
+        height = window.innerHeight
+    scene = new THREE.Scene()
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000)
+    camera.position.z = 300
+    renderer = new THREE.WebGLRenderer()
+    renderer.setSize(width, height)
+    renderer.autoClearColor = new THREE.Color(1, 0, 0, 0)
+    document.querySelector('#three').appendChild(renderer.domElement)
+    clock = new THREE.Clock()
+    control = new THREE.TrackballControls(camera)
+    control.rotateSpeed = 1.0
+    control.zoomSpeed = 0
+    control.panSpeed = 0
+    axes = new THREE.AxesHelper(CITY_RADIUS + 10)
+        //scene.add(axes)
+
+    window.addEventListener('resize', resize)
+}
+
+function createEarthParticles() {
+    let positions = []
+    let materials = []
+    let sizes = []
+    for (var i = 0; i < 2; i++) {
+        positions[i] = {
+            positions: []
+        }
+        sizes[i] = {
+            sizes: []
+        }
+        mat = new THREE.PointsMaterial()
+        mat.size = 5
+        mat.color = new THREE.Color(0xffffff)
+        mat.map = dotTexture
+        mat.depthWrite = false
+        mat.transparent = true
+        mat.opacity = 0
+        mat.side = THREE.FrontSide
+        mat.blending = THREE.AdditiveBlending
+        let n = i / 2
+        mat.t_ = n * Math.PI * 2
+        mat.speed_ = BLINT_SPEED
+        mat.min_ = .2 * Math.random() + .5
+        mat.delta_ = .1 * Math.random() + .1
+        mat.opacity_coef_ = 1
+        materials.push(mat)
+    }
+    var spherical = new THREE.Spherical
+    spherical.radius = radius
+    const step = 250
+    for (let i = 0; i < step; i++) {
+        let vec = new THREE.Vector3
+        let radians = step * (1 - Math.sin(i / step * Math.PI)) / step + .5 // 每个纬线圈内的角度均分
+        for (let j = 0; j < step; j += radians) {
+            let c = j / step, // 底图上的横向百分比
+                f = i / step, // 底图上的纵向百分比
+                index = Math.floor(2 * Math.random())
+            pos = positions[index]
+            size = sizes[index]
+            if (isLandByUV(c, f)) { // 根据横纵百分比判断在底图中的像素值
+                spherical.theta = c * Math.PI * 2 - Math.PI / 2 // 横纵百分比转换为theta和phi夹角
+                spherical.phi = f * Math.PI // 横纵百分比转换为theta和phi夹角
+                vec.setFromSpherical(spherical) // 夹角转换为世界坐标
+                pos.positions.push(vec.x)
+                pos.positions.push(vec.y)
+                pos.positions.push(vec.z)
+                if (j % 3 === 0) {
+                    size.sizes.push(6.0)
+                }
+            }
+        }
+    }
+    for (let i = 0; i < positions.length; i++) {
+        let pos = positions[i],
+            size = sizes[i],
+            bufferGeom = new THREE.BufferGeometry,
+            typedArr1 = new Float32Array(pos.positions.length),
+            typedArr2 = new Float32Array(size.sizes.length)
+        for (let j = 0; j < pos.positions.length; j++) {
+            typedArr1[j] = pos.positions[j]
+        }
+        for (let j = 0; j < size.sizes.length; j++) {
+            typedArr2[j] = size.sizes[j]
+        }
+        bufferGeom.addAttribute("position", new THREE.BufferAttribute(typedArr1, 3))
+        bufferGeom.addAttribute('size', new THREE.BufferAttribute(typedArr2, 1))
+        bufferGeom.computeBoundingSphere()
+        let particle = new THREE.Points(bufferGeom, materials[i])
+        earthParticles.add(particle)
+        earthParticles.rotateZ(0.3)
+    }
+    scene.add(earthParticles)
+}
+
+function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+}
+
+// function render() {
+//     let delta = clock.getDelta()
+//     control.update(delta)
+//     renderer.render(scene, camera)
+// }
+
+function render() {
+    earthParticles.rotateY(0.01)
+    renderer.render(scene, camera)
+}
+
+function animate() {
+    requestAnimationFrame(animate)
+        // 球面粒子闪烁
+    let objects = earthParticles.children
+    objects.forEach(obj => {
+        let material = obj.material
+        material.t_ += material.speed_
+        material.opacity = (Math.sin(material.t_) * material.delta_ + material.min_) * material.opacity_coef_
+        material.needsUpdate = true
+    })
+    render()
+}
+
+function isLandByUV(c, f) {
+    if (!earthImgData) { // 底图数据
+        console.error('data error!')
+    }
+    let n = parseInt(earthImg.width * c) // 根据横纵百分比计算图象坐标系中的坐标
+    o = parseInt(earthImg.height * f) // 根据横纵百分比计算图象坐标系中的坐标
+    return 0 === earthImgData.data[4 * (o * earthImgData.width + n)] // 查找底图中对应像素点的rgba值并判断
+}
+</script>
+
+</body>
+</html>
