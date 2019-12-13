@@ -17,13 +17,13 @@
   <script>
     // 场景
     var scene = new THREE.Scene()
-    var ge = new THREE.SphereGeometry(60, 40, 40) // 创建球体
-    // var ge = new THREE.BoxGeometry(100, 100, 100) // 创建球体
+    var ci = new THREE.SphereGeometry(60, 40, 40) // 创建球体
+    var ge = new THREE.BoxGeometry(100, 100, 100) // 创建正方体
     // 立方体
-    var ma = new THREE.MeshPhongMaterial({
-      color: 0x0000ff,
-      shininess: 150
-    }) // 高光材质
+    var ma = new THREE.MeshLambertMaterial({
+      color: 0x0000ff
+    }) 
+    // 材质
     var me = new THREE.Mesh(ge, ma) // 网格模型
     scene.add(me)
     console.log(scene)
@@ -50,13 +50,22 @@
     document.body.appendChild(renderer.domElement)
     renderer.render(scene, camera)
 
-    function render() {
-      renderer.render(scene, camera)
-      me.rotateY(0.01)
-    }
-    setInterval(() => {
-      render()
-    }, 20);
+    renderer.domElement.addEventListener("mousedown", (event) => {
+      let mouse = new THREE.Vector2();
+      let raycaster = new THREE.Raycaster();
+      // 计算鼠标点击位置转换到3D场景后的位置
+      mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+      // 由当前相机（视线位置）像点击位置发射线
+      raycaster.setFromCamera(mouse, camera);
+      let intersects = raycaster.intersectObjects(scene.children, true)
+      if (intersects.length > 0) {
+        // 拿到射线第一个照射到的物体
+        console.log(scene.children, intersects[0].object);
+        intersects[0].object.rotateY(10)
+        renderer.render(scene, camera)
+      }
+    });
   </script>
 </body>
 </html>

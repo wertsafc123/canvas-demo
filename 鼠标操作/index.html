@@ -12,18 +12,18 @@
   }
   </style>
   <script src="https://wow.techbrood.com/uploads/1805/three.js"></script>
+  <script src="https://wow.techbrood.com/uploads/160101/TrackballControls.js"></script>
 </head>
 <body>
   <script>
     // 场景
     var scene = new THREE.Scene()
-    var ge = new THREE.SphereGeometry(60, 40, 40) // 创建球体
-    // var ge = new THREE.BoxGeometry(100, 100, 100) // 创建球体
+    // var ge = new THREE.ShpereGeometry(60, 40, 40) // 创建球体
+    var ge = new THREE.BoxGeometry(100, 100, 100) // 创建球体
     // 立方体
-    var ma = new THREE.MeshPhongMaterial({
-      color: 0x0000ff,
-      shininess: 150
-    }) // 高光材质
+    var ma = new THREE.MeshLambertMaterial({
+      color: 0x0000ff
+    }) // 材质
     var me = new THREE.Mesh(ge, ma) // 网格模型
     scene.add(me)
     console.log(scene)
@@ -48,15 +48,16 @@
     renderer.setSize(width, height) // 设置渲染区域尺寸
     renderer.setClearColor(0x000000, 1) // 背景颜色
     document.body.appendChild(renderer.domElement)
-    renderer.render(scene, camera)
-
     function render() {
       renderer.render(scene, camera)
-      me.rotateY(0.01)
+      requestAnimationFrame(render)
+      console.log(control)
     }
-    setInterval(() => {
-      render()
-    }, 20);
+    render()
+    var control = new THREE.TrackballControls(camera)
+    control.rotateSpeed = 1.0
+    control.zoomSpeed = 1.0
+    control.panSpeed = 1.0
   </script>
 </body>
 </html>
